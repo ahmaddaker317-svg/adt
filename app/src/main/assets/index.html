@@ -7770,6 +7770,7 @@ body.adt-ghost-mode #ghostExitBadge {
 <div class="page" id="pageGroceryAudit">
 <div class="adt-v249-grocery-wrap"><div class="adt-audit-view-only-note">وضع العرض — التحكم في الجرد غير مفعّل لهذا الحساب</div>
 <div class="adt-v260-grocery-fixed no-print">
+<input id="groceryAuditReportName" type="hidden" value="" />
 <section class="adt-v249-grocery-summary"><div><small>الإجمالي</small><strong id="groceryAuditTotal">0.00</strong></div><span><b id="groceryAuditCount">0</b> صنف</span></section>
 <section class="adt-v249-quick-card">
 <div class="adt-v249-quick-title"><div><b>إضافة صنف بسرعة</b><small>اكتب أي صنف حتى لو غير موجود في المخزون</small></div><button type="button" class="adt-audited-open" onclick="window.openAuditedItemsViewer('grocery')" aria-label="عرض الأصناف المجرودة والبحث فيها">الأصناف المجرودة</button></div>
@@ -10106,7 +10107,10 @@ body.adt-ghost-mode #ghostExitBadge {
             return text;
         }catch(_){return text;}
     };
+    window.__adtAllowLegacyHtmlRecovery = true;
     window.showRequiredAppRelease = function(code,url,versionName,notes) {
+        /* Local HTML recovery build: don't lock the interface with a release popup. */
+        if (window.__adtAllowLegacyHtmlRecovery === true) { try { localStorage.removeItem('adt_required_app_release'); } catch (_) {} window.__adtRequiredRelease=null; return false; }
         if (!window.isAdtInstalledNativeApp()) {
             try { localStorage.removeItem('adt_required_app_release'); } catch (_) {}
             window.__adtRequiredRelease=null;
@@ -17905,7 +17909,23 @@ body.adt-ghost-mode #ghostExitBadge {
         [400, 1800, 5000].forEach(delay => setTimeout(() => window.adtEnsurePushBoundToCurrentTeam(), delay));
         if (localStorage.getItem('adt_signed_out_notice_v146') === '1') {
             localStorage.removeItem('adt_signed_out_notice_v146');
-            setTimeout(() => window.customAlert('تم تسجيل الخروج', 'تم تسجيل الخروج'), 120);
+            // لا نرجع للشاشة الرئيسية تلقائيًا ولا نعرض تنبيهًا عابرًا؛ ننتظر ضغط المستخدم.
+            setTimeout(() => {
+                if (document.getElementById('adtSignedOutReturnModal')) return;
+                const modal = document.createElement('div');
+                modal.id = 'adtSignedOutReturnModal';
+                modal.className = 'modal no-print';
+                modal.style.cssText = 'display:flex;z-index:100500;align-items:center;justify-content:center;';
+                modal.innerHTML = '<div class="modal-box" style="max-width:340px;text-align:center;padding:22px 18px"><h3 style="margin:0 0 10px;color:var(--text-main)">تم تسجيل الخروج</h3><p style="margin:0 0 18px;color:var(--text-muted);font-size:13px;line-height:1.7">انتهت الجلسة. اضغط الزر للعودة إلى شاشة الدخول.</p><button type="button" class="btn-primary" id="adtSignedOutReturnBtn" style="width:100%">العودة للرئيسية</button></div>';
+                document.body.appendChild(modal);
+                modal.querySelector('#adtSignedOutReturnBtn')?.addEventListener('click', function(){
+                    modal.remove();
+                    try { window.showAuthAfterMandatoryIntro?.(); } catch (_) {
+                        const auth = document.getElementById('onboardingModal');
+                        if (auth) auth.style.display = 'flex';
+                    }
+                });
+            }, 120);
         }
         // العلامة القديمة كانت عامة وغير مرتبطة بحساب، لذلك لا نعرضها.
         localStorage.removeItem('adt_team_deleted_notice_v194');
@@ -19266,7 +19286,7 @@ body[data-adt-tab="dailySales"] .app-main-content>.container{
 /* V259: إدخال جـرد مـحلـک داخل الصفحة بنفس طريقة بطاقة جرد سريع. */
 #pageAudit .adt-v259-wholesale-quick-card{padding:9px!important;border:1px solid #263c50!important;border-radius:13px!important;background:#0d1825!important;box-shadow:0 10px 25px rgba(0,0,0,.34)!important}
 #pageAudit .adt-v259-wholesale-quick-card .adt-v258-audit-quick-title{padding:0 0 7px!important;border:0!important;border-radius:0!important;background:transparent!important}
-.adt-v259-wholesale-name-wrap{position:relative;margin-bottom:6px}.adt-v259-wholesale-name-wrap .search-input-box{width:100%!important;height:41px!important;min-height:41px!important;margin:0!important;border-radius:10px!important;background:#07111c!important}.adt-v259-wholesale-name-wrap .search-results-dropdown{position:absolute!important;top:calc(100% + 4px)!important;right:0!important;left:0!important;z-index:120!important;max-height:210px!important;margin:0!important;border-radius:11px!important;background:#111b28!important;box-shadow:0 16px 36px rgba(0,0,0,.6)!important}.adt-v259-wholesale-name-wrap .search-res-item{width:100%;min-height:42px;text-align:right;border:0;border-bottom:1px solid #28394b;background:transparent;color:#fff;font:800 10px Cairo,sans-serif;padding:7px 9px}.adt-v259-wholesale-name-wrap .search-res-item:last-child{border-bottom:0}
+.adt-v259-wholesale-name-wrap{position:relative;margin-bottom:6px;isolation:isolate}.adt-v259-wholesale-name-wrap .search-results-dropdown{touch-action:pan-y;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}.adt-v259-wholesale-name-wrap .search-res-item,.adt-v259-wholesale-name-wrap .adt-v264-search-action{-webkit-tap-highlight-color:transparent;touch-action:manipulation}.adt-v259-wholesale-name-wrap .search-input-box{width:100%!important;height:41px!important;min-height:41px!important;margin:0!important;border-radius:10px!important;background:#07111c!important}.adt-v259-wholesale-name-wrap .search-results-dropdown{position:absolute!important;top:calc(100% + 4px)!important;right:0!important;left:0!important;z-index:120!important;max-height:210px!important;margin:0!important;border-radius:11px!important;background:#111b28!important;box-shadow:0 16px 36px rgba(0,0,0,.6)!important}.adt-v259-wholesale-name-wrap .search-res-item{width:100%;min-height:42px;text-align:right;border:0;border-bottom:1px solid #28394b;background:transparent;color:#fff;font:800 10px Cairo,sans-serif;padding:7px 9px}.adt-v259-wholesale-name-wrap .search-res-item:last-child{border-bottom:0}
 #pageAudit .adt-v259-wholesale-quick-card .adt-v249-number-grid{min-height:56px!important;gap:6px!important}#pageAudit .adt-v259-wholesale-quick-card .adt-v249-number-grid label span{font-size:7.5px!important;margin-bottom:2px!important}#pageAudit .adt-v259-wholesale-quick-card .input-field{height:40px!important;min-height:40px!important;text-align:center!important;font-weight:900!important}#pageAudit .adt-v259-wholesale-quick-card .adt-v251-line-preview{height:32px!important;margin-top:5px!important;padding:5px 9px!important}#pageAudit .adt-v259-wholesale-quick-card .adt-v249-add-btn{height:39px!important;min-height:39px!important;margin-top:6px!important}
 /* V260: ملخص أصغر وتثبيت أدوات جرد سريع كوحدة واحدة مثل جـرد مـحلـک. */
 #pageAudit .adt-v245-audit-summary{height:92px!important;min-height:92px!important;max-height:92px!important;box-sizing:border-box!important;grid-template-rows:24px 19px 17px!important;padding:9px 13px!important;row-gap:0!important}#pageAudit .adt-v245-audit-title-row .stat-card-title{font-size:8px!important;line-height:1.15!important}#pageAudit #auditModeBadge{margin-top:3px!important;padding:3px 8px!important;font-size:8px!important;line-height:1.2!important}#pageAudit #auditStatSum{font-size:20px!important;line-height:1.1!important}#pageAudit #auditStatCountSub{font-size:7.5px!important;line-height:1.2!important;margin:0!important}#pageAudit .adt-v245-save-state{font-size:7px!important;line-height:1.15!important;margin:0!important}
@@ -19386,7 +19406,7 @@ body[data-adt-tab="dailySales"] .app-main-content>.container{
     const source=window.groceryAuditEntries||[];
     if(!source.length){window.customAlert('لا يوجد جرد','أضف أصنافًا إلى الجرد أولًا.');return;}
     const rows=source.map((x,i)=>({index:i+1,name:String(x.name||''),qty:Number(x.qty||0),unit:String(x.unitName&&x.unitName!=='وحدة'?x.unitName:(x.unit==='piece'?'قطعة':'صندوق')),price:Number(x.price||0),total:Number(x.qty||0)*Number(x.price||0)}));
-    const totalSum=rows.reduce((s,x)=>s+x.total,0),store=currentTeam?.name||'متجرنا',date=new Date().toLocaleDateString('ar-LY-u-nu-latn');
+    const totalSum=rows.reduce((s,x)=>s+x.total,0),store=(String(document.getElementById('groceryAuditReportName')?.value||'').trim()||'جرد سريع'),date=new Date().toLocaleDateString('ar-LY-u-nu-latn');
     const PAGE_W=1200,PAGE_H=1697,LEFT=45,RIGHT=1155,TABLE_TOP=220,HEADER_H=48,ROW_H=54,FOOTER_Y=1650,rowsPerPage=23,pageCount=Math.ceil(rows.length/rowsPerPage),pages=[];
     const cols=[RIGHT,1090,610,470,340,190,LEFT];
     const fit=(ctx,value,max)=>{let t=String(value||'');if(ctx.measureText(t).width<=max)return t;while(t.length>2&&ctx.measureText(t+'…').width>max)t=t.slice(0,-1);return t+'…';};
@@ -19440,17 +19460,30 @@ body[data-adt-tab="dailySales"] .app-main-content>.container{
   window.editGroceryEntry=function(id){const x=window.groceryAuditEntries.find(r=>String(r.id)===String(id));if(!x)return;document.getElementById('groceryEditId').value=x.id;document.getElementById('groceryNameInput').value=x.name;document.getElementById('groceryQtyInput').value=x.qty;document.getElementById('groceryPriceInput').value=x.price||'';document.getElementById('groceryUnitInput').value=x.unit==='piece'?'piece':'pack';document.getElementById('grocerySaveEntryBtn').textContent='حفظ التعديل';document.getElementById('groceryCancelEditBtn').style.display='block';window.openGroceryEntryModal();};
   /* V258: إعادة طريقة إدخال جرد سريع الأصلية بعد تصحيح اتجاه طلب التصميم. */
   window.acceptNewGroceryName=function(){const name=String(document.getElementById('groceryNameInput')?.value||'').trim();if(!name)return;window.hideGrocerySuggestions();window.updateGroceryUnitButtons();setTimeout(()=>document.getElementById('groceryQtyInput')?.focus(),40);};
-  window.chooseGrocerySuggestion=function(index){const p=(window.__grocerySuggestionMatches||[])[Number(index)];if(!p)return;document.getElementById('groceryNameInput').value=p.name||'';const unit=document.getElementById('groceryUnitInput')?.value||'pack',packQty=Math.max(1,Number(p.packQty||1)),price=unit==='piece'?Number(p.sellPrice||0)/packQty:Number(p.sellPrice||0);document.getElementById('groceryPriceInput').value=price?price.toFixed(2):'';window.hideGrocerySuggestions();window.updateGroceryUnitButtons();window.previewGroceryEntryTotal();setTimeout(()=>document.getElementById('groceryQtyInput')?.focus(),40);};
+  window.chooseGrocerySuggestion=function(index){const p=(window.__grocerySuggestionMatches||[])[Number(index)];if(!p)return;document.getElementById('groceryNameInput').value=p.name||'';const unit=document.getElementById('groceryUnitInput')?.value||'pack',packQty=Math.max(1,Number(p.packQty||1)),price=unit==='piece'?Number(p.sellPrice||0)/packQty:Number(p.sellPrice||0);document.getElementById('groceryPriceInput').value=price?price.toFixed(2):'';window.hideGrocerySuggestions();document.getElementById('groceryProductSuggestions')?.classList.remove('show');window.updateGroceryUnitButtons();window.previewGroceryEntryTotal();setTimeout(()=>document.getElementById('groceryQtyInput')?.focus(),40);};
   window.editGroceryEntry=function(id){const x=window.groceryAuditEntries.find(r=>String(r.id)===String(id));if(!x)return;document.getElementById('groceryEditId').value=x.id;document.getElementById('groceryNameInput').value=x.name;document.getElementById('groceryQtyInput').value=x.qty;document.getElementById('groceryPriceInput').value=x.price||'';document.getElementById('groceryUnitInput').value=x.unit==='piece'?'piece':'pack';document.getElementById('grocerySaveEntryBtn').textContent='حفظ التعديل';document.getElementById('groceryCancelEditBtn').style.display='block';window.updateGroceryUnitButtons();window.previewGroceryEntryTotal();setTimeout(()=>document.getElementById('groceryNameInput')?.focus(),180);};
   window.__wholesaleQuickMatches=[];
-  window.hideWholesaleQuickSuggestions=function(){const box=document.getElementById('auditSearchResultsDropdown');if(box){box.style.display='none';box.innerHTML='';}};
+  window.hideWholesaleQuickSuggestions=function(force){const box=document.getElementById('auditSearchResultsDropdown'),input=document.getElementById('searchAuditBox');if(!force&&input&&document.activeElement===input&&String(input.value||'').trim()){return;}if(box){box.style.display='none';box.innerHTML='';}};
   window.previewWholesaleQuickTotal=function(){const qty=Number(document.getElementById('wholesaleQuickQty')?.value||0),price=Number(document.getElementById('wholesaleQuickPrice')?.value||0),total=Number.isFinite(qty)&&Number.isFinite(price)?qty*price:0,box=document.getElementById('wholesaleQuickTotal');if(box)box.textContent=window.formatMoney(total);};
   window.handleAuditSearchInput=function(){const input=document.getElementById('searchAuditBox'),box=document.getElementById('auditSearchResultsDropdown'),hidden=document.getElementById('wholesaleQuickProductId'),name=String(input?.value||'').trim(),query=window.getProductIdentityKey(name);if(!box)return;if(hidden){const selected=products.find(p=>String(p.id)===String(hidden.value||''));if(!selected||window.getProductIdentityKey(selected.name)!==query)hidden.value='';}if(!query){window.hideWholesaleQuickSuggestions();return;}const matches=products.filter(p=>window.getProductIdentityKey(p?.name).includes(query)).slice(0,6);window.__wholesaleQuickMatches=matches;if(!matches.length){box.innerHTML='<div style="padding:10px;text-align:center;color:#8194a7;font-size:9px">الصنف غير موجود في قائمة المنتجات</div>';box.style.display='block';return;}box.innerHTML=matches.map((p,i)=>`<button type="button" class="search-res-item" onclick="window.chooseWholesaleQuickProduct(${i})">${window.escapeHtml(p.name||'')}</button>`).join('');box.style.display='block';};
   window.chooseWholesaleQuickProduct=function(index){const p=(window.__wholesaleQuickMatches||[])[Number(index)];if(!p)return;document.getElementById('wholesaleQuickProductId').value=String(p.id);document.getElementById('searchAuditBox').value=p.name||'';document.getElementById('wholesaleQuickPrice').value=window.getAuditOnlyPrice(p).toFixed(2);window.hideWholesaleQuickSuggestions();window.previewWholesaleQuickTotal();setTimeout(()=>document.getElementById('wholesaleQuickQty')?.focus(),50);};
   window.clearWholesaleQuickAudit=function(){for(const id of ['wholesaleQuickProductId','searchAuditBox','wholesaleQuickQty','wholesaleQuickPrice']){const el=document.getElementById(id);if(el)el.value='';}window.hideWholesaleQuickSuggestions();window.previewWholesaleQuickTotal();};
   window.saveWholesaleQuickAudit=async function(){if(!window.canAudit()){window.customAlert('غير مسموح','لا تملك صلاحية تعديل الجرد.');return;}const id=String(document.getElementById('wholesaleQuickProductId')?.value||''),typed=String(document.getElementById('searchAuditBox')?.value||'').trim(),p=products.find(x=>String(x.id)===id)||products.find(x=>window.getProductIdentityKey(x?.name)===window.getProductIdentityKey(typed));if(!p){window.customAlert('اختر الصنف','اختر الصنف من نتائج البحث أولًا.');document.getElementById('searchAuditBox')?.focus();return;}const qty=Number(document.getElementById('wholesaleQuickQty')?.value),price=Number(document.getElementById('wholesaleQuickPrice')?.value);if(!Number.isFinite(qty)||qty<=0){document.getElementById('wholesaleQuickQty')?.focus();return;}if(!Number.isFinite(price)||price<0){document.getElementById('wholesaleQuickPrice')?.focus();return;}const mode=window.auditMode==='retail'?'retail':'wholesale',base=window.getAuditBasePrice(p),priceKey=mode+':'+String(p.id);if(Math.abs(price-base)<.000001)delete window.auditOnlyPrices[priceKey];else window.auditOnlyPrices[priceKey]=price;window.saveAuditOnlyPrices();if(mode==='retail'){const final=window.getRetailAuditQty(p)+qty;window.retailAuditState[String(p.id)]=final;p.retailAuditQty=final;window.saveRetailAudit();window.clearWholesaleQuickAudit();window.renderAudit();window.showToast('تمت إضافة الكمية إلى جرد القطاعي');window.broadcastTeamStateChanged?.('audit_item');return;}if(!(await window.confirmGhostMutation('إضافة صنف إلى الجرد')))return;if((!dbClient||!currentTeam)&&!window.isDeveloperOffline()){window.customAlert('لا يوجد اتصال بالخادم','تعذر الحفظ لأن الاتصال بالخادم غير متاح.');return;}const previous=Number(p.auditQty||0),final=previous+qty;p.auditQty=final;window.clearWholesaleQuickAudit();window.renderAudit();window.showToast(previous>0?'تمت إضافة الكمية إلى الصنف الموجود':'تم إدخال الصنف في الجرد');window.queueWholesaleAuditSave(p,previous,final);};
   document.addEventListener('pointerdown',event=>{if(!event.target.closest('.adt-v250-grocery-name-wrap'))window.hideGrocerySuggestions();});
-  document.addEventListener('pointerdown',event=>{if(!event.target.closest('.adt-v259-wholesale-name-wrap'))window.hideWholesaleQuickSuggestions();});
+  window.__adtAuditOutsideTapAt=0;
+  document.addEventListener('pointerdown',event=>{if(!event.target.closest('.adt-v259-wholesale-name-wrap')){window.__adtAuditOutsideTapAt=Date.now();window.__adtAuditSearchDismissed=true;window.hideWholesaleQuickSuggestions();}});
+  /* Android/WebView: closing the soft keyboard can blur the input or resize the viewport. Keep results visible for an active search; distinguish keyboard-dismiss resize from a real outside tap. */
+  (function(){
+    const input=document.getElementById('searchAuditBox');if(!input||input.dataset.adtStableDropdownBound==='1')return;input.dataset.adtStableDropdownBound='1';
+    const restore=(fromResize=false)=>{setTimeout(()=>{const box=document.getElementById('auditSearchResultsDropdown'),q=document.getElementById('searchAuditBox'),hidden=document.getElementById('wholesaleQuickProductId');if(!box||!q)return;const query=window.getProductIdentityKey(q.value||'');if(!query)return;const selected=products.find(p=>String(p.id)===String(hidden?.value||''));if(selected&&window.getProductIdentityKey(selected.name)===query)return;
+      if(fromResize && Date.now()-Number(window.__adtAuditOutsideTapAt||0)<1200){window.__adtAuditSearchDismissed=false;}
+      if(window.__adtAuditSearchDismissed)return;window.handleAuditSearchInput?.();},140);};
+    input.addEventListener('focus',()=>{window.__adtAuditSearchDismissed=false;restore(false);});
+    input.addEventListener('input',()=>{window.__adtAuditSearchDismissed=false;});
+    input.addEventListener('blur',()=>restore(false));
+    if(window.visualViewport)window.visualViewport.addEventListener('resize',()=>restore(true));
+    window.addEventListener('resize',()=>restore(true));
+  })();
 
   /* V263: بطاقة إجمالي جـرد مـحلـک تستخدم نفس تركيب وتصميم بطاقة البقالة. */
   const renderAuditV263=window.renderAudit;
@@ -19488,12 +19521,16 @@ body[data-adt-tab="dailySales"] .app-main-content>.container{
     const price=document.getElementById('wholesaleQuickPrice');if(price&&p){const e=window.getWholesaleUnitEntry(p),value=selected==='piece'?Number(e.piecePrice??(Number(p.buyPrice||0)/Math.max(1,Number(p.packQty||1)))):Number(e.packPrice??Number(p.buyPrice||0));price.value=value.toFixed(2);}window.previewWholesaleQuickTotal();
   };
   window.handleAuditSearchInput=function(){
-    const input=document.getElementById('searchAuditBox'),box=document.getElementById('auditSearchResultsDropdown'),hidden=document.getElementById('wholesaleQuickProductId'),query=window.getProductIdentityKey(input?.value||'');if(!box)return;if(hidden)hidden.value='';if(!query){window.hideWholesaleQuickSuggestions();return;}
+    const input=document.getElementById('searchAuditBox'),box=document.getElementById('auditSearchResultsDropdown'),hidden=document.getElementById('wholesaleQuickProductId'),query=window.getProductIdentityKey(input?.value||'');if(!box)return;if(!query){window.hideWholesaleQuickSuggestions();return;}
+    window.__adtAuditSearchDismissed=false;
+    /* Keep the dropdown mounted while typing; rebuilding identical rows on every focus/input event caused visible flicker on mobile WebView. */
     const matches=products.filter(p=>window.getProductIdentityKey(p?.name).includes(query)).slice(0,6);window.__wholesaleQuickMatches=matches;
-    box.innerHTML=matches.length?matches.map((p,i)=>{const audited=window.getWholesaleUnitTotalQty(p)>0||Number(p.auditQty||0)>0;return `<div class="adt-v264-search-row"><span class="adt-v264-search-info"><b>${window.escapeHtml(p.name||'')}</b><small>${window.escapeHtml(p.packName||'صندوق')} / ${window.escapeHtml(p.pieceName||'قطعة')}</small></span><button type="button" class="adt-v264-search-action ${audited?'add':''}" onclick="event.preventDefault();event.stopPropagation();window.chooseWholesaleQuickProduct(${i})">${audited?'زيادة عدد':'جرد'}</button></div>`;}).join(''):'<div style="padding:10px;text-align:center;color:#8194a7;font-size:9px">الصنف غير موجود في قائمة المنتجات</div>';box.style.display='block';
+    const html=matches.length?matches.map((p,i)=>{const audited=window.getWholesaleUnitTotalQty(p)>0||Number(p.auditQty||0)>0;return `<div class="adt-v264-search-row"><span class="adt-v264-search-info"><b>${window.escapeHtml(p.name||'')}</b><small>${window.escapeHtml(p.packName||'صندوق')} / ${window.escapeHtml(p.pieceName||'قطعة')}</small></span><button type="button" class="adt-v264-search-action ${audited?'add':''}" onclick="event.preventDefault();event.stopPropagation();window.chooseWholesaleQuickProduct(${i})">${audited?'زيادة عدد':'جرد'}</button></div>`;}).join(''):'<div style="padding:10px;text-align:center;color:#8194a7;font-size:9px">الصنف غير موجود في قائمة المنتجات</div>';
+    if(box.innerHTML!==html)box.innerHTML=html;
+    box.style.display='block';
   };
   window.chooseWholesaleQuickProduct=function(index){
-    const p=(window.__wholesaleQuickMatches||[])[Number(index)];if(!p)return;document.getElementById('wholesaleQuickProductId').value=String(p.id);document.getElementById('searchAuditBox').value=p.name||'';document.getElementById('wholesaleQuickEditMode').value='add';const audited=window.getWholesaleUnitTotalQty(p)>0||Number(p.auditQty||0)>0;document.getElementById('wholesaleQuickSaveBtn').textContent=audited?'زيادة العدد':'إضافة إلى الجرد';window.hideWholesaleQuickSuggestions();window.setWholesaleAuditUnit(document.getElementById('wholesaleQuickUnit')?.value||'pack');setTimeout(()=>document.getElementById('wholesaleQuickQty')?.focus(),50);
+    const p=(window.__wholesaleQuickMatches||[])[Number(index)];if(!p)return;window.__adtAuditSearchDismissed=true;document.getElementById('wholesaleQuickProductId').value=String(p.id);document.getElementById('searchAuditBox').value=p.name||'';document.getElementById('wholesaleQuickEditMode').value='add';const audited=window.getWholesaleUnitTotalQty(p)>0||Number(p.auditQty||0)>0;document.getElementById('wholesaleQuickSaveBtn').textContent=audited?'زيادة العدد':'إضافة إلى الجرد';window.hideWholesaleQuickSuggestions(true);window.setWholesaleAuditUnit(document.getElementById('wholesaleQuickUnit')?.value||'pack');setTimeout(()=>document.getElementById('wholesaleQuickQty')?.focus(),50);
   };
   window.clearWholesaleQuickAudit=function(){for(const id of ['wholesaleQuickProductId','searchAuditBox','wholesaleQuickQty','wholesaleQuickPrice']){const el=document.getElementById(id);if(el)el.value='';}document.getElementById('wholesaleQuickEditMode').value='add';document.getElementById('wholesaleQuickSaveBtn').textContent='إضافة إلى الجرد';window.hideWholesaleQuickSuggestions();window.setWholesaleAuditUnit('pack');window.previewWholesaleQuickTotal();};
   window.saveWholesaleQuickAudit=async function(){
@@ -19747,9 +19784,23 @@ if(window.canManageDailySales?.())tasks.push(window.fetchDailySales?.(false));if
       await window.syncCriticalCloudState?.();
       if(!document.hidden&&currentTeam&&String(currentTeam.id)===teamId){
         await window.fetchProductsIfDue?.(false);
-        if(currentTab==='audit')window.renderAudit?.();
-        else if(currentTab==='groceryAudit'){window.populateGrocerySuggestions?.();window.renderGroceryAudit?.();}
-        window.renderAuditedItemsViewer?.();
+        /* Keep cloud sync running, but NEVER redraw the audit UI while the user is searching.
+           renderAudit() rebuilds the audit DOM and can destroy/hide the live dropdown/input
+           during typing or when the Android keyboard changes viewport size. */
+        const auditSearch=document.getElementById('searchAuditBox');
+        const auditQueryActive=!!(auditSearch && String(auditSearch.value||'').trim());
+        const auditSearchInteracting=!!(auditSearch && (document.activeElement===auditSearch || auditQueryActive));
+        if(currentTab==='audit'){
+          if(!auditSearchInteracting) window.renderAudit?.();
+        } else if(currentTab==='groceryAudit'){
+          const grocerySearch=document.querySelector('#groceryNameInput, #groceryAuditSearch, #searchGroceryAuditBox, [data-grocery-audit-search]');
+          const groceryQueryActive=!!(grocerySearch && String(grocerySearch.value||'').trim());
+          if(!(grocerySearch && (document.activeElement===grocerySearch || groceryQueryActive))){
+            window.populateGrocerySuggestions?.();
+            window.renderGroceryAudit?.();
+          }
+        }
+        if(!auditSearchInteracting) window.renderAuditedItemsViewer?.();
       }
     }catch(error){console.debug('[Audit page refresh] deferred',error);}
     finally{window.__adtAuditPageRefreshBusy=false;}
@@ -21161,5 +21212,379 @@ if(window.canManageDailySales?.())tasks.push(window.fetchDailySales?.(false));if
 })();
 </script>
 <!-- ADT Stock Fix21: primary-manager-only deletion; preserve historical debts, invoices and payment records. -->
+
+<script id="adt-audit-search-sync-safe-v266">
+(function(){
+  /* V266: keep audit search DOM stable during periodic cloud sync; results hide only when query is cleared. */
+  window.hideWholesaleQuickSuggestions=function(){
+    const input=document.getElementById('searchAuditBox');
+    const box=document.getElementById('auditSearchResultsDropdown');
+    if(!box)return;
+    if(String(input?.value||'').trim())return;
+    box.style.display='none';
+    box.innerHTML='';
+    window.__wholesaleQuickMatches=[];
+    window.__adtAuditSearchDismissed=false;
+  };
+  window.handleAuditSearchInput=function(){
+    const input=document.getElementById('searchAuditBox');
+    const box=document.getElementById('auditSearchResultsDropdown');
+    const hidden=document.getElementById('wholesaleQuickProductId');
+    if(!input||!box)return;
+    const raw=String(input.value||'');
+    const query=window.getProductIdentityKey(raw);
+    if(!query){
+      if(hidden)hidden.value='';
+      box.style.display='none';box.innerHTML='';window.__wholesaleQuickMatches=[];
+      window.__adtAuditSearchDismissed=false;return;
+    }
+    window.__adtAuditSearchDismissed=false;
+    if(hidden){const selected=products.find(p=>String(p.id)===String(hidden.value||''));if(!selected||window.getProductIdentityKey(selected.name)!==query)hidden.value='';}
+    const matches=products.filter(p=>window.getProductIdentityKey(p?.name).includes(query)).slice(0,6);
+    window.__wholesaleQuickMatches=matches;
+    const html=matches.length?matches.map((p,i)=>{
+      const audited=window.getWholesaleUnitTotalQty(p)>0||Number(p.auditQty||0)>0;
+      return `<div class="adt-v264-search-row"><span class="adt-v264-search-info"><b>${window.escapeHtml(p.name||'')}</b><small>${window.escapeHtml(p.packName||'صندوق')} / ${window.escapeHtml(p.pieceName||'قطعة')}</small></span><button type="button" class="adt-v264-search-action ${audited?'add':''}" onclick="event.preventDefault();event.stopPropagation();window.chooseWholesaleQuickProduct(${i})">${audited?'زيادة عدد':'جرد'}</button></div>`;
+    }).join(''):'<div style="padding:10px;text-align:center;color:#8194a7;font-size:9px">الصنف غير موجود في قائمة المنتجات</div>';
+    if(box.innerHTML!==html)box.innerHTML=html;
+    box.style.display='block';
+  };
+})();
+</script>
+
+<script id="adt-audit-search-both-modes-v267">
+(function(){
+  /* V267: apply sync-safe search to both shop audit and quick grocery audit. */
+  const priorHideWholesale=window.hideWholesaleQuickSuggestions;
+  window.hideWholesaleQuickSuggestions=function(force){
+    const box=document.getElementById('auditSearchResultsDropdown');
+    const input=document.getElementById('searchAuditBox');
+    /* Outside taps, focus changes, and keyboard dismissal must not close results while text remains. */
+    if(!window.__adtSelectingAuditProduct && input && String(input.value||'').trim()){
+      if(box) box.style.display='block';
+      return;
+    }
+    if(box){box.style.display='none';box.innerHTML='';}
+    window.__wholesaleQuickMatches=[];
+  };
+  const priorChooseWholesale=window.chooseWholesaleQuickProduct;
+  window.chooseWholesaleQuickProduct=function(index){
+    window.__adtSelectingAuditProduct=true;
+    let result;
+    try { result=priorChooseWholesale.apply(this,arguments); }
+    finally { window.__adtSelectingAuditProduct=false; }
+    /* Explicitly close only after a product is selected. */
+    const box=document.getElementById('auditSearchResultsDropdown');
+    if(box){box.style.display='none';box.innerHTML='';}
+    window.__wholesaleQuickMatches=[];
+    return result;
+  };
+  const priorChooseGrocery=window.chooseGrocerySuggestion;
+  window.chooseGrocerySuggestion=function(index){
+    const result=priorChooseGrocery.apply(this,arguments);
+    const list=document.getElementById('groceryProductSuggestions');
+    if(list){list.classList.remove('show');list.innerHTML='';}
+    return result;
+  };
+})();
+</script>
+
+\n<script id="adt-v269-search-name-fix">
+(function(){
+  // لا تخفِ قائمة بحث جرد محلك عند النقر خارجها؛ تُخفى عند مسح النص أو اختيار المنتج.
+  document.addEventListener('pointerdown',function(event){
+    const input=document.getElementById('searchAuditBox');
+    const box=document.getElementById('auditSearchResultsDropdown');
+    if(!input||!box||!String(input.value||'').trim())return;
+    if(event.target.closest('.adt-v259-wholesale-name-wrap'))return;
+    event.stopImmediatePropagation();
+  },true);
+  const priorHide=window.hideWholesaleQuickSuggestions;
+  window.hideWholesaleQuickSuggestions=function(force){
+    const input=document.getElementById('searchAuditBox');
+    const box=document.getElementById('auditSearchResultsDropdown');
+    if(!force&&input&&String(input.value||'').trim()){
+      if(box)box.style.display='flex';
+      return;
+    }
+    if(typeof priorHide==='function')return priorHide.apply(this,arguments);
+    if(box){box.innerHTML='';box.style.display='none';}
+  };
+  const input=document.getElementById('searchAuditBox');
+  if(input&&!input.dataset.adtV269ClearOnly){
+    input.dataset.adtV269ClearOnly='1';
+    input.addEventListener('input',function(){
+      if(!String(input.value||'').trim()){
+        const box=document.getElementById('auditSearchResultsDropdown');
+        if(box){box.innerHTML='';box.style.display='none';}
+        window.__adtAuditSearchDismissed=true;
+      }else{window.__adtAuditSearchDismissed=false;window.handleAuditSearchInput?.();}
+    });
+  }
+  // اسم التقرير للجرد السريع فقط: زر صغير، ثم حفظ وإخفاء محرر الاسم.
+  const name=document.getElementById('groceryAuditReportName');
+  const nameEditor=document.getElementById('groceryAuditReportNameEditor');
+  const nameEditorWrap=document.getElementById('groceryAuditNameEditor');
+  const nameOpenBtn=document.getElementById('groceryAuditNameOpenBtn');
+  const nameSavedLabel=document.getElementById('groceryAuditNameSavedLabel');
+  const nameKey=()=> 'adt_grocery_audit_report_name_v271_'+String(currentTeam?.id||'local');
+  const paintNameUI=(value)=>{
+    const v=String(value||'').trim();
+    if(name)name.value=v;
+    if(nameEditor)nameEditor.value=v;
+    if(nameEditorWrap)nameEditorWrap.style.display='none';
+    if(nameOpenBtn)nameOpenBtn.style.display=v?'none':'inline-flex';
+    if(nameSavedLabel){nameSavedLabel.textContent=v?'اسم التقرير: '+v:'';nameSavedLabel.style.display=v?'inline':'none';}
+  };
+  window.openGroceryAuditReportNameEditor=function(){
+    if(nameEditorWrap)nameEditorWrap.style.display='flex';
+    if(nameOpenBtn)nameOpenBtn.style.display='none';
+    if(nameSavedLabel)nameSavedLabel.style.display='none';
+    if(nameEditor){nameEditor.value=name?.value||'';nameEditor.focus();}
+  };
+  window.saveGroceryAuditReportName=function(){
+    const v=String(nameEditor?.value||'').trim();
+    if(!v){window.customAlert?.('اكتب اسم المحل','اكتب الاسم أولًا ثم اضغط حفظ.');return;}
+    try{localStorage.setItem(nameKey(),v);}catch(e){}
+    paintNameUI(v);
+    window.showToast?.('تم حفظ اسم تقرير الجرد السريع');
+  };
+  const clearGroceryReportName=()=>{try{
+    const team=String(currentTeam?.id||'local');
+    localStorage.removeItem('adt_grocery_audit_report_name_v270_'+team);
+    localStorage.removeItem('adt_grocery_audit_report_name_v269_'+team);
+    localStorage.removeItem('adt_grocery_audit_report_name_v271_'+team);
+  }catch(e){}paintNameUI('');};
+  try{const team=String(currentTeam?.id||'local');const saved=localStorage.getItem(nameKey())||localStorage.getItem('adt_grocery_audit_report_name_v270_'+team)||localStorage.getItem('adt_grocery_audit_report_name_v269_'+team)||'';paintNameUI(saved);if(saved)localStorage.setItem(nameKey(),saved);}catch(e){paintNameUI('');}
+  // عند نجاح تصفير الجرد السريع، امسح الاسم ليبدأ التقرير التالي باسم جديد.
+  const resetGroceryAuditForReportName=window.resetGroceryAudit;
+  if(typeof resetGroceryAuditForReportName==='function'){
+    window.resetGroceryAudit=async function(){
+      const before=(window.groceryAuditEntries||[]).length;
+      const result=await resetGroceryAuditForReportName.apply(this,arguments);
+      const after=(window.groceryAuditEntries||[]).length;
+      if(before>0&&after===0)clearGroceryReportName();
+      return result;
+    };
+  }
+})();
+</script>\n
+<script id="adt-v271-audit-name-and-logout-final">
+(function(){
+  // عند تصفير الجرد السريع بنجاح فقط، امسح اسم التقرير حتى يُطلب اسم جديد للجرد التالي.
+  const priorReset=window.resetGroceryAudit;
+  if(typeof priorReset==='function'){
+    window.resetGroceryAudit=async function(){
+      const before=Array.isArray(window.groceryAuditEntries)?window.groceryAuditEntries.length:0;
+      const result=await priorReset.apply(this,arguments);
+      const after=Array.isArray(window.groceryAuditEntries)?window.groceryAuditEntries.length:0;
+      if(before>0&&after===0){
+        const team=String(window.currentTeam?.id||'local');
+        try{['adt_grocery_audit_report_name_v269_','adt_grocery_audit_report_name_v270_','adt_grocery_audit_report_name_v271_'].forEach(k=>localStorage.removeItem(k+team));}catch(_){}
+        const hidden=document.getElementById('groceryAuditReportName');if(hidden)hidden.value='';
+        const editor=document.getElementById('groceryAuditReportNameEditor');if(editor)editor.value='';
+        const wrap=document.getElementById('groceryAuditNameEditor');if(wrap)wrap.style.display='none';
+        const btn=document.getElementById('groceryAuditNameOpenBtn');if(btn)btn.style.display='inline-flex';
+        const label=document.getElementById('groceryAuditNameSavedLabel');if(label){label.textContent='';label.style.display='none';}
+      }
+      return result;
+    };
+  }
+})();
+</script>
+
+
+<style id="adt-v272-grocery-name-login-style">
+#adtGroceryNameLogin{position:fixed;inset:0;z-index:999999;display:none;align-items:center;justify-content:center;padding:22px;background:rgba(2,7,14,.88);backdrop-filter:blur(8px)}
+#adtGroceryNameLogin .adt-login-card{width:min(100%,390px);padding:25px 20px 20px;border:1px solid rgba(0,210,180,.38);border-radius:24px;background:linear-gradient(155deg,#132436,#08111d 78%);box-shadow:0 24px 80px rgba(0,0,0,.6);text-align:center;color:#fff}
+#adtGroceryNameLogin .adt-login-logo{width:62px;height:62px;margin:0 auto 15px;border-radius:19px;display:grid;place-items:center;background:linear-gradient(135deg,#00e4c4,#00a98e);color:#06121a;font-size:27px;font-weight:1000;box-shadow:0 8px 24px rgba(0,210,180,.2)}
+#adtGroceryNameLogin h2{font-size:20px;margin:0 0 7px;font-weight:1000}#adtGroceryNameLogin p{font-size:12px;line-height:1.8;color:#9db0c2;margin:0 0 18px}
+#adtGroceryNameLogin input{width:100%;box-sizing:border-box;height:49px;border-radius:13px;border:1px solid #35536a;background:#07111d;color:#fff;text-align:center;font:800 15px Cairo,sans-serif;padding:0 12px;outline:none;margin-bottom:12px}
+#adtGroceryNameLogin input:focus{border-color:#00d2b4;box-shadow:0 0 0 3px rgba(0,210,180,.12)}
+#adtGroceryNameLogin .adt-login-submit{width:100%;height:47px;border:0;border-radius:13px;background:linear-gradient(135deg,#00e4c4,#00b99d);color:#04131a;font:1000 14px Cairo,sans-serif}
+#adtGroceryNameLogin .adt-login-cancel{display:block;margin:12px auto 0;border:0;background:transparent;color:#8ea2b6;font:700 12px Cairo,sans-serif;padding:7px 16px}
+</style>
+<div id="adtGroceryNameLogin" role="dialog" aria-modal="true" aria-labelledby="adtGroceryNameTitle">
+ <div class="adt-login-card"><div class="adt-login-logo">✓</div><h2 id="adtGroceryNameTitle">ابدأ جردًا سريعًا جديدًا</h2><p>اكتب اسم المحل الذي تريد ظهوره في تقرير PDF. سيتم حفظ الاسم لهذا الجرد، ويمكنك كتابة اسم جديد بعد التصفير.</p>
+ <input id="adtGroceryNameLoginInput" type="text" maxlength="100" autocomplete="organization" placeholder="اكتب اسم المحل هنا" />
+ <button class="adt-login-submit" type="button" onclick="window.confirmGroceryNameAndOpen()">حفظ وبدء الجرد</button>
+ <button class="adt-login-cancel" type="button" onclick="window.closeGroceryNameLogin()">إلغاء والعودة للرئيسية</button></div>
+</div>
+<script id="adt-v272-grocery-name-login">
+(function(){
+ const key=()=> 'adt_grocery_audit_report_name_v271_'+String(window.currentTeam?.id||'local');
+ const modal=()=>document.getElementById('adtGroceryNameLogin');
+ const input=()=>document.getElementById('adtGroceryNameLoginInput');
+ const hidden=()=>document.getElementById('groceryAuditReportName');
+ const saved=()=>{try{return String(localStorage.getItem(key())||'').trim()}catch(_){return ''}};
+ const paint=(v)=>{if(hidden())hidden().value=String(v||'').trim()};
+ window.closeGroceryNameLogin=function(){if(modal())modal().style.display='none';};
+ window.confirmGroceryNameAndOpen=function(){const v=String(input()?.value||'').trim();if(!v){input()?.focus();window.showToast?.('اكتب اسم المحل أولًا');return;}try{localStorage.setItem(key(),v)}catch(_){}paint(v);window.closeGroceryNameLogin();if(typeof window.__adtV272OriginalOpenSaleAudit==='function')window.__adtV272OriginalOpenSaleAudit();};
+ const prior=window.openSaleAudit;
+ if(typeof prior==='function'){
+  window.__adtV272OriginalOpenSaleAudit=prior;
+  window.openSaleAudit=function(){const v=saved();paint(v);if(v){prior.apply(this,arguments);return;}if(input())input().value='';if(modal())modal().style.display='flex';setTimeout(()=>input()?.focus(),80);};
+ }
+ // Keep the old inline editor out of the page; name entry is now a dedicated first-entry screen.
+ const oldCard=document.getElementById('groceryAuditNameCard');if(oldCard)oldCard.style.display='none';
+ const priorReset=window.resetGroceryAudit;
+ if(typeof priorReset==='function')window.resetGroceryAudit=async function(){const before=Array.isArray(window.groceryAuditEntries)?window.groceryAuditEntries.length:0;const result=await priorReset.apply(this,arguments);const after=Array.isArray(window.groceryAuditEntries)?window.groceryAuditEntries.length:0;if(before>0&&after===0){try{localStorage.removeItem(key())}catch(_){}paint('');if(input())input().value='';}return result;};
+ // If a previously saved name exists, keep it available for PDF generation without prompting.
+ paint(saved());
+})();
+</script>
+
+
+<script id="adt-v273-saved-audit-name-pdf-and-stable-search">
+(function(){
+  const teamName=()=>String(window.currentTeam?.name||'ADT Stock').trim();
+  const groceryName=()=>{try{return String(localStorage.getItem('adt_grocery_audit_report_name_v271_'+String(window.currentTeam?.id||'local'))||document.getElementById('groceryAuditReportName')?.value||'').trim();}catch(_){return String(document.getElementById('groceryAuditReportName')?.value||'').trim();}};
+  // Store the report's shop name in the actual saved snapshot before reset clears the current name.
+  const oldMake=window.makeGrocerySnapshot;
+  if(typeof oldMake==='function')window.makeGrocerySnapshot=function(){const snap=oldMake.apply(this,arguments)||{};snap.storeName=groceryName()||snap.storeName||'جرد سريع';return snap;};
+  const histRead=()=>{try{return window.readAuditHistory?.()||[]}catch(_){return []}};
+  const selectedSnapshot=()=>{const id=String(window.__adtSelectedAuditSnapshotId||'');if(!id)return null;return histRead().find(x=>String(x.id)===id)||null;};
+  // Correct the history detail to display the snapshot that was actually tapped, not only the last snapshot.
+  const oldOpenDetail=window.openAuditHistoryDetail;
+  if(typeof oldOpenDetail==='function')window.openAuditHistoryDetail=function(id){const result=oldOpenDetail.apply(this,arguments);const snap=histRead().find(x=>String(x.id)===String(id));if(snap){window.__adtSelectedAuditSnapshotId=String(id);const title=document.getElementById('previousAuditHeadTitle');if(title){const name=String(snap.storeName|| (snap.mode==='selling'?'جرد سريع':teamName())).trim();title.textContent=name||'الجرد المحفوظ';}const sub=document.getElementById('previousAuditHeadSub');if(sub)sub.textContent='تفاصيل الجرد المحفوظ';}return result;};
+  // Export the selected historical snapshot using canvas->PDF, avoiding the failing html2pdf route.
+  window.exportPreviousAuditPDF=async function(){
+    const snap=selectedSnapshot() || window.readLastAuditSnapshot?.();
+    if(!snap||!Array.isArray(snap.items)||!snap.items.length){window.customAlert?.('لا يوجد جرد','لا توجد أصناف في الجرد المحفوظ المحدد للتصدير.');return;}
+    if(!window.canAudit?.()){window.customAlert?.('صلاحية مقفلة','تصدير الجرد متاح للحسابات المصرح لها فقط.');return;}
+    const selling=snap.mode==='selling',retail=snap.mode==='retail';
+    const store=String(snap.storeName||(selling?'جرد سريع':teamName())||'الجرد المحفوظ').trim();
+    const rows=snap.items.map((it,i)=>({n:i+1,name:String(it.name||''),qty:Number(it.qty||0),unit:String(it.unitName||(it.unit==='piece'?'قطعة':it.unit==='pack'?'صندوق':retail?'قطعة':'وحدة')),price:Number(it.buyPrice||0)}));
+    const total=rows.reduce((a,r)=>a+r.qty*r.price,0),safe=store.replace(/[\\/:*?"<>|\u0000-\u001f]/g,'_').slice(0,70)||'الجرد_المحفوظ';
+    const W=1200,H=1697,L=45,R=1155,top=250,hh=48,rh=54,per=22,pages=Math.ceil(rows.length/per),cols=[R,1090,610,470,340,190,L],canvases=[];
+    const fit=(ctx,t,max)=>{t=String(t||'');while(t.length>1&&ctx.measureText(t).width>max)t=t.slice(0,-1);return t;};
+    for(let pi=0;pi<pages;pi++){
+      const canvas=document.createElement('canvas');canvas.width=W;canvas.height=H;const c=canvas.getContext('2d');if(!c)throw new Error('Canvas unavailable');
+      c.fillStyle='#fff';c.fillRect(0,0,W,H);c.direction='rtl';c.textAlign='center';c.fillStyle='#111';c.font='bold 34px Cairo,Arial,sans-serif';c.fillText(store,W/2,58);c.font='bold 25px Cairo,Arial,sans-serif';c.fillText(selling?'تقرير الجرد السريع المحفوظ':retail?'تقرير جرد القطاعي المحفوظ':'تقرير جرد المحل المحفوظ',W/2,105);c.font='18px Cairo,Arial,sans-serif';c.fillStyle='#555';c.fillText('تاريخ الجرد: '+new Date(snap.createdAt||Date.now()).toLocaleString('ar-LY-u-nu-latn'),W/2,145);c.fillStyle='#00d2b4';c.fillRect(L,170,R-L,48);c.fillStyle='#071019';c.font='bold 20px Cairo,Arial,sans-serif';c.fillText(`إجمالي الجرد: ${Number(total).toFixed(2)}   |   عدد الأصناف: ${rows.length}`,W/2,201);
+      c.fillStyle='#eee';c.fillRect(L,top,R-L,hh);const border=(y,h)=>{c.strokeStyle='#222';c.lineWidth=1;c.strokeRect(L,y,R-L,h);c.beginPath();cols.slice(1,-1).forEach(x=>{c.moveTo(x,y);c.lineTo(x,y+h)});c.stroke()};border(top,hh);c.fillStyle='#111';c.font='bold 17px Cairo,Arial,sans-serif';['#','اسم الصنف','الكمية','الوحدة','السعر','الإجمالي'].forEach((v,i)=>c.fillText(v,(cols[i]+cols[i+1])/2,top+31));
+      const part=rows.slice(pi*per,(pi+1)*per);let y=top+hh;part.forEach((r,j)=>{if(j%2){c.fillStyle='#f8f8f8';c.fillRect(L,y,R-L,rh)}border(y,rh);c.fillStyle='#111';c.font='17px Cairo,Arial,sans-serif';c.textAlign='center';c.fillText(String(r.n),(cols[0]+cols[1])/2,y+34);c.direction='rtl';c.textAlign='right';c.font='bold 17px Cairo,Arial,sans-serif';c.fillText(fit(c,r.name,440),cols[1]-16,y+34);c.textAlign='center';c.font='17px Cairo,Arial,sans-serif';c.fillText(String(r.qty),(cols[2]+cols[3])/2,y+34);c.fillText(fit(c,r.unit,100),(cols[3]+cols[4])/2,y+34);c.fillText(r.price.toFixed(2),(cols[4]+cols[5])/2,y+34);c.font='bold 17px Cairo,Arial,sans-serif';c.fillText((r.qty*r.price).toFixed(2),(cols[5]+cols[6])/2,y+34);y+=rh});c.fillStyle='#666';c.font='16px Cairo,Arial,sans-serif';c.textAlign='center';c.fillText(`صفحة ${pi+1} من ${pages} • ADT Stock`,W/2,1650);canvases.push(canvas);
+    }
+    try{window.showToast?.('جاري تجهيز ملف PDF...');if(typeof window.createPurePdfBlobFromCanvases!=='function'||typeof window.sharePdfBlob!=='function')throw new Error('PDF helper unavailable');await window.sharePdfBlob(window.createPurePdfBlobFromCanvases(canvases),`${safe}_${new Date(snap.createdAt||Date.now()).toISOString().slice(0,10)}.pdf`)}catch(e){console.error('[ADT saved audit PDF]',e);window.customAlert?.('تعذر التصدير',e?.message||'حدث خطأ أثناء إنشاء ملف PDF.');}
+  };
+  // Grocery quick-search suggestions should survive taps outside the search field while text remains.
+  const groceryInput=()=>document.getElementById('groceryNameInput'),groceryList=()=>document.getElementById('groceryProductSuggestions');
+  const oldHideGrocery=window.hideGrocerySuggestions;
+  window.__adtGrocerySuggestionChosen=false;
+  window.hideGrocerySuggestions=function(force){const inp=groceryInput(),list=groceryList();if(!force&&inp&&String(inp.value||'').trim()&&!window.__adtGrocerySuggestionChosen){if(list)list.classList.add('show');return;}if(typeof oldHideGrocery==='function')return oldHideGrocery.apply(this,arguments);if(list)list.classList.remove('show');};
+  groceryInput()?.addEventListener('input',()=>{window.__adtGrocerySuggestionChosen=false;});
+  const oldChoose=window.chooseGrocerySuggestion;
+  if(typeof oldChoose==='function')window.chooseGrocerySuggestion=function(){window.__adtGrocerySuggestionChosen=true;return oldChoose.apply(this,arguments);};
+  const oldAccept=window.acceptNewGroceryName;
+  if(typeof oldAccept==='function')window.acceptNewGroceryName=function(){window.__adtGrocerySuggestionChosen=true;return oldAccept.apply(this,arguments);};
+  // For the shop-audit search, reassert visibility after outside taps; product selection still closes it.
+  document.addEventListener('pointerdown',function(e){const inp=document.getElementById('searchAuditBox'),box=document.getElementById('auditSearchResultsDropdown');if(!inp||!box||!String(inp.value||'').trim()||e.target.closest('.adt-v259-wholesale-name-wrap'))return;setTimeout(()=>{if(String(inp.value||'').trim()&&!window.__adtSelectingAuditProduct&&box.isConnected)box.style.display='block';},0);},false);
+  document.addEventListener('pointerdown',function(e){const inp=groceryInput(),list=groceryList();if(!inp||!list||!String(inp.value||'').trim()||e.target.closest('.adt-v250-grocery-name-wrap'))return;setTimeout(()=>{if(String(inp.value||'').trim()&&!window.__adtGrocerySuggestionChosen&&list.isConnected)list.classList.add('show');},0);},false);
+})();
+</script>
+
+<script id="adt-v274-show-saved-audit-name">
+(function(){
+ const getQuickName=()=>{try{return String(localStorage.getItem('adt_grocery_audit_report_name_v271_'+String(window.currentTeam?.id||'local'))||document.getElementById('groceryAuditReportName')?.value||'').trim()}catch(e){return String(document.getElementById('groceryAuditReportName')?.value||'').trim()}};
+ const getName=s=>{let n=String(s?.storeName||s?.reportName||s?.auditName||'').trim();if(!n&&s?.mode==='selling')n=getQuickName();if(!n&&s?.mode!=='selling')n=String(window.currentTeam?.name||'').trim();return n||(s?.mode==='selling'?'جرد سريع':window.getAuditModeLabel?.(s?.mode)||'الجرد المحفوظ')};
+ window.renderAuditHistoryList=function(){
+  const box=document.getElementById('previousAuditHistoryList');let history=[];try{history=window.readAuditHistory?.()||[]}catch(e){}if(!box)return;
+  if(!history.length){box.innerHTML='<div class="adt-v246-history-empty"><b>لا توجد جردات محفوظة</b>عند تصفير أي جرد سيظهر هنا بالتاريخ والقيمة.</div>';return;}
+  box.innerHTML=history.map(s=>{const value=(s.items||[]).reduce((n,x)=>n+Number(x.qty||0)*Number(x.buyPrice||0),0),stamp=new Date(s.createdAt||Date.now()),date=stamp.toLocaleDateString('en-GB',{year:'numeric',month:'2-digit',day:'2-digit'}),time=stamp.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',hour12:false}),name=getName(s);return `<button class="adt-v246-history-card" onclick="window.openAuditHistoryDetail('${String(s.id)}')"><span class="adt-v246-history-icon">▦</span><span class="adt-v246-history-info"><span class="adt-v248-date" style="display:block;font-weight:900;margin-bottom:5px">${window.escapeHtml(name)}</span><span class="adt-v246-history-date"><span class="adt-v248-date">${window.escapeHtml(date)}</span><span class="adt-v248-time">${window.escapeHtml(time)}</span></span><span class="adt-v246-history-meta">${window.getAuditModeLabel(s.mode)} • ${(s.items||[]).length} صنف</span></span><span class="adt-v246-history-value"><strong>${window.formatMoney(value)}</strong><span>قيمة الجرد</span></span></button>`}).join('');
+ };
+ const oldOpen=window.openAuditHistoryDetail;
+ if(typeof oldOpen==='function')window.openAuditHistoryDetail=function(id){const r=oldOpen.apply(this,arguments);let s;try{s=(window.readAuditHistory?.()||[]).find(x=>String(x.id)===String(id))}catch(e){}if(s){window.__adtSelectedAuditSnapshotId=String(id);const title=document.getElementById('previousAuditHeadTitle');if(title)title.textContent=getName(s);const sub=document.getElementById('previousAuditHeadSub');if(sub)sub.textContent='تفاصيل الجرد المحفوظ';}return r};
+})();
+</script>
+
+<script id="adt-v275-save-unique-grocery-audit-name">
+(function(){
+  const getName=()=>{
+    const team=String(window.currentTeam?.id||'local');
+    const keys=['adt_grocery_audit_report_name_v271_','adt_grocery_audit_report_name_v270_','adt_grocery_audit_report_name_v269_'];
+    for(const prefix of keys){try{const v=String(localStorage.getItem(prefix+team)||'').trim();if(v)return v;}catch(_){}}
+    for(const id of ['groceryAuditReportName','groceryNameInput']){const el=document.getElementById(id);const v=String(el?.value||'').trim();if(v)return v;}
+    const label=document.getElementById('groceryAuditNameSavedLabel');
+    const m=String(label?.textContent||'').match(/اسم التقرير:\s*(.+)/);return m?m[1].trim():'';
+  };
+  // Capture the report name before reset clears the input/localStorage key.
+  const originalReset=window.resetGroceryAudit;
+  if(typeof originalReset==='function')window.resetGroceryAudit=async function(){
+    const capturedName=getName();
+    const originalWrite=window.writeAuditHistory;
+    let attached=false;
+    if(typeof originalWrite==='function')window.writeAuditHistory=function(history){
+      let list=Array.isArray(history)?history.slice():[];
+      if(!attached&&list.length){
+        const newest=list[0];
+        if(newest&&newest.mode==='selling'&&Array.isArray(newest.items)){
+          newest.storeName=capturedName||newest.storeName||'جرد سريع';
+          attached=true;
+        }
+      }
+      return originalWrite.call(this,list);
+    };
+    try{return await originalReset.apply(this,arguments);}
+    finally{if(typeof originalWrite==='function')window.writeAuditHistory=originalWrite;}
+  };
+  // Keep each saved audit's own name visible; do not use the currently active name as a fallback.
+  const oldOpen=window.openAuditHistoryDetail;
+  if(typeof oldOpen==='function')window.openAuditHistoryDetail=function(id){
+    const result=oldOpen.apply(this,arguments);
+    const list=window.readAuditHistory?.()||[];
+    const snap=list.find(x=>String(x.id)===String(id));
+    if(snap){window.__adtSelectedAuditSnapshotId=String(id);const title=document.getElementById('previousAuditHeadTitle');if(title)title.textContent=String(snap.storeName||'جرد سريع');}
+    return result;
+  };
+})();
+</script>
+
+<script id="adt-v276-audit-name-per-snapshot-fix">
+(function(){
+ const team=()=>String(window.currentTeam?.id||'local');
+ const readName=()=>{
+   const t=team();
+   for(const id of ['groceryAuditReportName','groceryAuditReportNameEditor']){const v=String(document.getElementById(id)?.value||'').trim();if(v)return v;}
+   for(const prefix of ['adt_grocery_audit_report_name_v271_','adt_grocery_audit_report_name_v270_','adt_grocery_audit_report_name_v269_']){try{const v=String(localStorage.getItem(prefix+t)||'').trim();if(v)return v;}catch(_){}}
+   const label=String(document.getElementById('groceryAuditNameSavedLabel')?.textContent||'').trim();return label.replace(/^اسم التقرير:\s*/,'').trim();
+ };
+ const originalReset=window.resetGroceryAudit;
+ if(typeof originalReset==='function')window.resetGroceryAudit=async function(){
+   const captured=readName();
+   const write=window.writeAuditHistory;
+   let attached=false;
+   if(typeof write==='function')window.writeAuditHistory=function(history){
+     const list=(Array.isArray(history)?history:[]).map(x=>({...x}));
+     // The history is not guaranteed to be newest-first: choose the most recent selling snapshot.
+     const candidates=list.map((x,i)=>({x,i})).filter(o=>o.x&&o.x.mode==='selling'&&Array.isArray(o.x.items));
+     if(!attached&&candidates.length){
+       candidates.sort((a,b)=>Number(b.x.createdAt||0)-Number(a.x.createdAt||0));
+       const target=candidates[0].x;
+       if(captured)target.storeName=captured;
+       else if(!String(target.storeName||target.reportName||target.auditName||'').trim())target.storeName='جرد سريع';
+       attached=true;
+     }
+     return write.call(this,list);
+   };
+   try{return await originalReset.apply(this,arguments)}
+   finally{if(typeof write==='function')window.writeAuditHistory=write;}
+ };
+ // Display each snapshot's own saved name. Never fall back to the currently active report name.
+ window.renderAuditHistoryList=function(){
+   const box=document.getElementById('previousAuditHistoryList');let history=[];
+   try{history=window.readAuditHistory?.()||[]}catch(_){}
+   if(!box)return;
+   if(!history.length){box.innerHTML='<div class="adt-v246-history-empty"><b>لا توجد جردات محفوظة</b>عند تصفير أي جرد سيظهر هنا بالتاريخ والقيمة.</div>';return;}
+   box.innerHTML=history.map(s=>{
+     const value=(s.items||[]).reduce((n,x)=>n+Number(x.qty||0)*Number(x.buyPrice||0),0);
+     const stamp=new Date(s.createdAt||Date.now());
+     const date=stamp.toLocaleDateString('en-GB',{year:'numeric',month:'2-digit',day:'2-digit'});
+     const time=stamp.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',hour12:false});
+     const name=String(s.storeName||s.reportName||s.auditName||(s.mode==='selling'?'جرد سريع':window.currentTeam?.name||'الجرد المحفوظ')).trim();
+     return `<button class="adt-v246-history-card" onclick="window.openAuditHistoryDetail('${String(s.id)}')"><span class="adt-v246-history-icon">▦</span><span class="adt-v246-history-info"><span class="adt-v248-date" style="display:block;font-weight:900;margin-bottom:5px">${window.escapeHtml(name)}</span><span class="adt-v246-history-date"><span class="adt-v248-date">${window.escapeHtml(date)}</span><span class="adt-v248-time">${window.escapeHtml(time)}</span></span><span class="adt-v246-history-meta">${window.getAuditModeLabel(s.mode)} • ${(s.items||[]).length} صنف</span></span><span class="adt-v246-history-value"><strong>${window.formatMoney(value)}</strong><span>قيمة الجرد</span></span></button>`;
+   }).join('');
+ };
+})();
+</script>
+
 </body>
 </html>
